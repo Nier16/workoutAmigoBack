@@ -1,4 +1,4 @@
-package org.acme.controller;
+package org.acme.ressource;
 
 import org.acme.entity.Exercise;
 
@@ -12,7 +12,7 @@ import java.util.List;
 @Path("/exercises")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class ExerciseController {
+public class ExerciseResource {
 
     @GET
     public List<Exercise> list() {
@@ -46,6 +46,8 @@ public class ExerciseController {
         entity.img = exercise.img;
         entity.level = exercise.level;
         entity.muscles = exercise.muscles;
+
+        entity.persist();
 
         return entity;
     }
