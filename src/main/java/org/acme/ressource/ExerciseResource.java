@@ -35,21 +35,15 @@ public class ExerciseResource {
     @PUT
     @Path("/{id}")
     @Transactional
-    public Exercise update(Long id, Exercise exercise) {
-        Exercise entity = Exercise.findById(id);
+    public Exercise update(Exercise exercise) {
+        Exercise entity = Exercise.findById(exercise.id);
         if(entity == null) {
             throw new NotFoundException();
         }
 
-        entity.name = exercise.name;
-        entity.description = exercise.description;
-        entity.img = exercise.img;
-        entity.level = exercise.level;
-        entity.muscles = exercise.muscles;
+        exercise.persist();
 
-        entity.persist();
-
-        return entity;
+        return exercise;
     }
 
     @DELETE
