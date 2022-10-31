@@ -12,6 +12,7 @@ public class Exercise extends PanacheEntity {
 
     public String name;
     public String description;
+    public ExerciseLevel level;
 
     @Convert(converter = ListStringConverter.class)
     public List<String> muscles;
@@ -19,6 +20,6 @@ public class Exercise extends PanacheEntity {
     @Column(columnDefinition = "varchar(320000)")
     public String img;
 
+    @Column(columnDefinition = "varchar(31457280)")
     public String video;
-    public ExerciseLevel level;
 }
