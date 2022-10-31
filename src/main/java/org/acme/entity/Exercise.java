@@ -20,6 +20,6 @@ public class Exercise extends PanacheEntity {
     @Column(columnDefinition = "varchar(320000)")
     public String img;
 
-    @Column(columnDefinition = "varchar(31457280)")
+    @Column(columnDefinition = "varchar(10485760)")
     public String video;
 }
