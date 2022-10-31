@@ -12,10 +12,11 @@ public class Exercise extends PanacheEntity {
 
     public String name;
     public String description;
+
     @Convert(converter = ListStringConverter.class)
     public List<String> muscles;
 
-    @Lob
+    @Column(columnDefinition = "varchar(320000)")
     public String img;
 
     public String video;
