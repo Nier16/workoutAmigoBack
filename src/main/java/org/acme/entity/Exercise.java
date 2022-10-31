@@ -14,6 +14,8 @@ public class Exercise extends PanacheEntity {
     public String description;
     @Convert(converter = ListStringConverter.class)
     public List<String> muscles;
+
+    @Lob
     public String img;
 
     public String video;
