@@ -11,15 +11,12 @@ import security.TokenUtils;
 import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Consumes("application/json")
 @Produces(MediaType.APPLICATION_JSON)
@@ -39,7 +36,7 @@ public class AuthenticationREST {
         Optional<User> u = User.findByUsername(authRequest.username);
         if (u.isPresent() && u.get().password.equals(passwordEncoder.encode(authRequest.password))) {
             try {
-                return Response.ok(new AuthResponse(TokenUtils.generateToken(u.get().username, u.get().roles, duration, issuer))).build();
+                return Response.ok(new AuthResponse(TokenUtils.generateToken(u.get().username, u.get().roles, duration, issuer), u.get().roles)).build();
             } catch (Exception e) {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
             }
@@ -62,10 +59,47 @@ public class AuthenticationREST {
             return Response.status(Response.Status.CONFLICT.getStatusCode(), "A user already exist with this username").build();
         }
 
-        User.persist(new User(authRequest.username, passwordEncoder.encode(authRequest.password), Collections.singleton(Role.USER)));
+        final Set<Role> roles = new HashSet<>();
+        roles.add(Role.USER);
+
+        if(User.listAll().isEmpty()) {
+            roles.add(Role.ADMIN);
+        }
+
+        User.persist(new User(authRequest.username, passwordEncoder.encode(authRequest.password), roles));
 
         return Response
                 .status(Response.Status.CREATED.getStatusCode(), "User correctly created, please try to login with your new credentials")
                 .build();
     }
+
+    @PermitAll
+    @GET
+    public Response users() {
+        return Response.ok(User.listAll()).build();
+    }
+
+    @PermitAll
+    @DELETE
+    @Transactional
+    public Response deleteAll() {
+        return Response.ok(String.format("%s users deleted", User.deleteAll())).build();
+    }
+
+    @PermitAll
+    @DELETE
+    @Path("/{username}")
+    @Transactional
+    public Response delete(String username) {
+        if(username == null || username.isBlank()){
+            return Response.status(Response.Status.BAD_REQUEST.getStatusCode(), "username should be specified").build();
+        }
+
+        if(!User.deleteById(username)){
+            return Response.status(Response.Status.NOT_FOUND.getStatusCode(), "username not found").build();
+        }
+        return Response.ok(String.format("%s user deleted", username)).build();
+    }
+
+
 }
