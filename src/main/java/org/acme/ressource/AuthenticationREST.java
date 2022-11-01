@@ -89,7 +89,7 @@ public class AuthenticationREST {
             return Response.status(Response.Status.FORBIDDEN.getStatusCode(), "The token must be provided").build();
         }
 
-        final var res = new AuthResponse(authHeader, this.securityIdentity.getRoles().stream().map(Role::valueOf).collect(Collectors.toSet()));
+        final var res = new AuthResponse(token, this.securityIdentity.getRoles().stream().map(Role::valueOf).collect(Collectors.toSet()));
 
         return Response.ok(res).build();
     }
