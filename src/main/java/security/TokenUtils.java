@@ -68,4 +68,8 @@ public class TokenUtils {
         return (int) (currentTimeMS / 1000);
     }
 
+    public static String getTokenFromAuth(String auth) {
+        return auth == null || auth.isBlank() ? null : auth.replace("Bearer ", "");
+    }
+
 }

@@ -1,10 +1,13 @@
 package org.acme.ressource;
 
+import io.quarkus.security.Authenticated;
+import io.quarkus.security.identity.SecurityIdentity;
 import org.acme.entity.User;
 import org.acme.model.AuthRequest;
 import org.acme.model.AuthResponse;
 import org.acme.model.Role;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import security.PBKDF2Encoder;
 import security.TokenUtils;
 
@@ -17,14 +20,18 @@ import javax.ws.rs.core.Response;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Consumes("application/json")
 @Produces(MediaType.APPLICATION_JSON)
-@Path("/user")
+@Path("/auth")
 public class AuthenticationREST {
 
     @Inject
     PBKDF2Encoder passwordEncoder;
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     @ConfigProperty(name = "com.ard333.quarkusjwt.jwt.duration") public Long duration;
     @ConfigProperty(name = "mp.jwt.verify.issuer") public String issuer;
@@ -32,7 +39,7 @@ public class AuthenticationREST {
     @PermitAll
     @POST
     @Path("/login")
-    public Response login(AuthRequest authRequest) {
+    public Response login(@RequestBody AuthRequest authRequest) {
         Optional<User> u = User.findByUsername(authRequest.username);
         if (u.isPresent() && u.get().password.equals(passwordEncoder.encode(authRequest.password))) {
             try {
@@ -73,33 +80,17 @@ public class AuthenticationREST {
                 .build();
     }
 
-    @PermitAll
-    @GET
-    public Response users() {
-        return Response.ok(User.listAll()).build();
-    }
-
-    @PermitAll
-    @DELETE
-    @Transactional
-    public Response deleteAll() {
-        return Response.ok(String.format("%s users deleted", User.deleteAll())).build();
-    }
-
-    @PermitAll
-    @DELETE
-    @Path("/{username}")
-    @Transactional
-    public Response delete(String username) {
-        if(username == null || username.isBlank()){
-            return Response.status(Response.Status.BAD_REQUEST.getStatusCode(), "username should be specified").build();
+    @Authenticated
+    @POST
+    @Path("/validate")
+    public Response validateToken(@HeaderParam("Authorization") String authHeader) {
+        final String token = TokenUtils.getTokenFromAuth(authHeader);
+        if(token == null || token.isBlank()){
+            return Response.status(Response.Status.FORBIDDEN.getStatusCode(), "The token must be provided").build();
         }
 
-        if(!User.deleteById(username)){
-            return Response.status(Response.Status.NOT_FOUND.getStatusCode(), "username not found").build();
-        }
-        return Response.ok(String.format("%s user deleted", username)).build();
+        final var res = new AuthResponse(authHeader, this.securityIdentity.getRoles().stream().map(Role::valueOf).collect(Collectors.toSet()));
+
+        return Response.ok(res).build();
     }
-
-
 }

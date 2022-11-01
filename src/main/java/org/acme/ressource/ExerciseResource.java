@@ -1,7 +1,12 @@
 package org.acme.ressource;
 
+import io.quarkus.security.Authenticated;
+import io.quarkus.security.identity.SecurityIdentity;
 import org.acme.entity.Exercise;
+import org.acme.model.Role;
 
+import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -19,12 +24,14 @@ public class ExerciseResource {
         return Exercise.listAll();
     }
 
+    @Authenticated
     @GET
     @Path("/{id}")
     public Exercise exerciseById(Long id) {
         return Exercise.findById(id);
     }
 
+    @RolesAllowed({Role.USER_NAME, Role.ADMIN_NAME})
     @POST
     @Transactional
     public Response create(Exercise exercise) {
@@ -32,6 +39,7 @@ public class ExerciseResource {
         return Response.created(URI.create("/exercises/" + exercise.id)).build();
     }
 
+    @Authenticated
     @PUT
     @Path("/{id}")
     @Transactional
@@ -46,6 +54,7 @@ public class ExerciseResource {
         return exercise;
     }
 
+    @Authenticated
     @DELETE
     @Path("/{id}")
     @Transactional
