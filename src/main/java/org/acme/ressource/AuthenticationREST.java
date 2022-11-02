@@ -17,6 +17,7 @@ import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -73,7 +74,7 @@ public class AuthenticationREST {
             roles.add(Role.ADMIN);
         }
 
-        User.persist(new User(authRequest.username, passwordEncoder.encode(authRequest.password), roles));
+        User.persist(new User(authRequest.username, passwordEncoder.encode(authRequest.password), roles, Collections.emptyList()));
 
         return Response
                 .status(Response.Status.CREATED.getStatusCode(), "User correctly created, please try to login with your new credentials")
@@ -82,7 +83,7 @@ public class AuthenticationREST {
 
     @Authenticated
     @POST
-    @Path("/validate")
+    @Path("/secure/validate")
     public Response validateToken(@HeaderParam("Authorization") String authHeader) {
         final String token = TokenUtils.getTokenFromAuth(authHeader);
         if(token == null || token.isBlank()){
