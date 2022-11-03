@@ -7,6 +7,11 @@ import org.acme.entity.Exercise;
 import org.acme.entity.User;
 import org.acme.model.Role;
 import org.acme.model.UserDto;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -27,12 +32,32 @@ public class UserResource {
     @Inject
     ExerciseResource exerciseResource;
 
+    @Operation(summary = "Get the active user for the auth token provided in the header (secured)")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Found the user",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserDto.class)) }),
+            @APIResponse(responseCode = "401", description = "Token passed in the header is not valid or expired",
+                    content = @Content),
+            @APIResponse(responseCode = "404", description = "User not found in the data base",
+                    content = @Content) })
     @Authenticated
     @GET
     public Response activeUser() {
         return Response.ok(new UserDto(this.getUser())).build();
     }
 
+    @Operation(summary = "Add the exercise with the id passed in PathParam as favorite for the active user (secured)")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Favorite added",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Long[].class)) }),
+            @APIResponse(responseCode = "401", description = "Token passed in the header is not valid or expired",
+                    content = @Content),
+            @APIResponse(responseCode = "404", description = "User Or Exercise not found in the data base",
+                    content = @Content),
+            @APIResponse(responseCode = "409", description = "This exercise is already in favorites list of this user",
+                    content = @Content) })
     @Authenticated
     @POST
     @Path("/favorites")
@@ -51,9 +76,20 @@ public class UserResource {
         exercise.persist();
         user.persist();
 
-        return Response.ok(user.favorites).build();
+        return Response.ok(user.favorites.stream().map(f -> f.id).collect(Collectors.toList())).build();
     }
 
+    @Operation(summary = "Remove the exercise with the id passed in PathParam from the favorites for the active user (secured)")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Favorite removed",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Long[].class)) }),
+            @APIResponse(responseCode = "401", description = "Token passed in the header is not valid or expired",
+                    content = @Content),
+            @APIResponse(responseCode = "404", description = "User Or Exercise not found in the data base",
+                    content = @Content),
+            @APIResponse(responseCode = "409", description = "This exercise is not in the favorites of the user",
+                    content = @Content) })
     @Authenticated
     @DELETE
     @Path("/favorites")
@@ -63,7 +99,7 @@ public class UserResource {
         final Exercise exercise = this.exerciseResource.getExercise(id);
 
         if(user.favorites.stream().noneMatch(ex -> ex.id.equals(id))){
-            return Response.status(Response.Status.BAD_REQUEST.getStatusCode(), "This exercise does not exist in favorit list").build();
+            return Response.status(Response.Status.BAD_REQUEST.getStatusCode(), "This exercise does not exist in favorite list").build();
         }
 
         user.favorites.remove(exercise);
@@ -72,9 +108,18 @@ public class UserResource {
         exercise.persist();
         user.persist();
 
-        return Response.ok(user.favorites).build();
+        return Response.ok(user.favorites.stream().map(f -> f.id).collect(Collectors.toList())).build();
     }
 
+    @Operation(summary = "Get all users of the app (admin)")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Users returned",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserDto[].class)) }),
+            @APIResponse(responseCode = "401", description = "Token passed in the header is not valid or expired",
+                    content = @Content),
+            @APIResponse(responseCode = "403", description = "Only admin can have access to this resource",
+                    content = @Content) })
     @RolesAllowed({Role.ADMIN_NAME})
     @GET
     @Path("/all")
@@ -82,6 +127,15 @@ public class UserResource {
         return Response.ok(User.listAll().stream().map(u -> new UserDto((User) u)).collect(Collectors.toList())).build();
     }
 
+    @Operation(summary = "Delete all users of the app (admin)")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Users deleted",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Integer.class)) }),
+            @APIResponse(responseCode = "401", description = "Token passed in the header is not valid or expired",
+                    content = @Content),
+            @APIResponse(responseCode = "403", description = "Only admin can have access to this resource",
+                    content = @Content) })
     @RolesAllowed({Role.ADMIN_NAME})
     @DELETE
     @Transactional
@@ -89,6 +143,15 @@ public class UserResource {
         return Response.ok(String.format("%s users deleted", User.deleteAll())).build();
     }
 
+    @Operation(summary = "Delete a user of the app by his username as PathParam (admin)")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "User deleted",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = String.class)) }),
+            @APIResponse(responseCode = "401", description = "Token passed in the header is not valid or expired",
+                    content = @Content),
+            @APIResponse(responseCode = "403", description = "Only admin can have access to this resource",
+                    content = @Content) })
     @RolesAllowed({Role.ADMIN_NAME})
     @DELETE
     @Path("/{username}")
