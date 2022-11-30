@@ -1,11 +1,9 @@
 package org.acme.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.acme.entity.Exercise;
 
-import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -17,7 +15,6 @@ public class ExerciseDto {
     private ExerciseLevel level;
     private List<String> muscles;
     private String img;
-    private String video;
 
     public ExerciseDto(Exercise exercise) {
         this.id = exercise.id;
@@ -37,8 +34,6 @@ public class ExerciseDto {
         exercise.level = this.level;
         exercise.muscles = this.muscles;
         exercise.img = this.img;
-        exercise.video = this.video;
-        exercise.users = Collections.emptyList();
 
         return exercise;
     }
