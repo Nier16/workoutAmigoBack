@@ -1,22 +1,36 @@
 package org.acme.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.*;
+import lombok.*;
 import org.acme.converter.ListStringConverter;
 import org.acme.model.ExerciseLevel;
 
-import javax.persistence.*;
 import java.util.List;
 
 @Entity
-public class Exercise extends PanacheEntity {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Exercise {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", nullable = false)
+    private Long id;
 
-    public String name;
-    public String description;
-    public ExerciseLevel level;
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "level")
+    private ExerciseLevel level;
 
     @Convert(converter = ListStringConverter.class)
-    public List<String> muscles;
+    @Column(name = "muscles")
+    private List<String> muscles;
 
-    @Column(columnDefinition = "varchar(320000)")
-    public String img;
+    @Column(name = "img", columnDefinition = "varchar(320000)")
+    private String img;
 }
