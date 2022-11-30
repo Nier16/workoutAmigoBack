@@ -1,10 +1,10 @@
 package org.acme.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
 import org.acme.converter.ListStringConverter;
 import org.acme.model.ExerciseLevel;
 
+import javax.persistence.*;
 import java.util.List;
 
 @Entity
