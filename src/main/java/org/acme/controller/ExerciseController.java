@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ExerciseController {
 
+
     private final ExerciseRepository exerciseRepository;
 
     @GetMapping
